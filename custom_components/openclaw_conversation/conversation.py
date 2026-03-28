@@ -84,15 +84,15 @@ class OpenClawConversationEntity(ConversationEntity):
                 language=user_input.language,
                 ha_context=ha_context,
             )
-        except OpenClawTimeoutError:
-            _LOGGER.warning("OpenClaw request timed out")
+        except OpenClawTimeoutError as err:
+            _LOGGER.warning("OpenClaw request timed out: %s", err)
             response_text = _msg_timeout(user_input.language)
         except OpenClawConnectionError as err:
             _LOGGER.error("OpenClaw connection error: %s", err)
             response_text = _msg_connection_error(user_input.language)
         except OpenClawApiError as err:
             _LOGGER.error("OpenClaw API error: %s", err)
-            response_text = _msg_api_error(user_input.language)
+            response_text = _msg_api_error(user_input.language, detail=str(err))
         else:
             response_text = data.get("response", "")
             # Keep the server-assigned conversation_id when provided.
@@ -142,7 +142,11 @@ def _msg_connection_error(lang: str) -> str:
     return "Cannot connect to James. Please check the configuration."
 
 
-def _msg_api_error(lang: str) -> str:
+def _msg_api_error(lang: str, detail: str = "") -> str:
     if lang.startswith("de"):
-        return "James hat einen Fehler zurückgegeben. Bitte versuche es erneut."
-    return "James returned an error. Please try again."
+        msg = "James: API-Fehler."
+    else:
+        msg = "James: API error."
+    if detail:
+        msg = f"{msg} ({detail})"
+    return msg

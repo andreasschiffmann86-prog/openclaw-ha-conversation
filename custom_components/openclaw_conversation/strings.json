@@ -1,0 +1,53 @@
+{
+  "config": {
+    "step": {
+      "user": {
+        "title": "OpenClaw Conversation Agent einrichten",
+        "description": "Verbinde Home Assistant mit deiner OpenClaw-Instanz (James).",
+        "data": {
+          "api_url": "API-URL",
+          "api_key": "API-Schlüssel (optional)",
+          "agent_name": "Anzeigename",
+          "timeout": "Timeout (Sekunden)",
+          "send_ha_context": "Gerätezustand an James senden"
+        },
+        "data_description": {
+          "api_url": "URL deiner OpenClaw-Instanz, z.B. http://192.168.1.100:8080",
+          "api_key": "Bearer-Token zur Authentifizierung (leer lassen wenn nicht benötigt)",
+          "agent_name": "Name des Agenten in Home Assistant (z.B. James)",
+          "timeout": "Maximale Wartezeit auf eine Antwort (5–120 Sekunden)",
+          "send_ha_context": "Sendet den aktuellen Status deiner Geräte mit jeder Anfrage"
+        }
+      }
+    },
+    "error": {
+      "cannot_connect": "Verbindung fehlgeschlagen. Bitte prüfe die API-URL.",
+      "invalid_auth": "Ungültiger API-Schlüssel.",
+      "timeout": "Zeitüberschreitung beim Verbindungstest.",
+      "unknown": "Unbekannter Fehler. Siehe HA-Log für Details."
+    },
+    "abort": {
+      "already_configured": "Diese OpenClaw-Instanz ist bereits eingerichtet."
+    }
+  },
+  "options": {
+    "step": {
+      "init": {
+        "title": "OpenClaw Einstellungen",
+        "data": {
+          "api_url": "API-URL",
+          "api_key": "API-Schlüssel (optional)",
+          "agent_name": "Anzeigename",
+          "timeout": "Timeout (Sekunden)",
+          "send_ha_context": "Gerätezustand an James senden"
+        }
+      }
+    },
+    "error": {
+      "cannot_connect": "Verbindung fehlgeschlagen. Bitte prüfe die API-URL.",
+      "invalid_auth": "Ungültiger API-Schlüssel.",
+      "timeout": "Zeitüberschreitung beim Verbindungstest.",
+      "unknown": "Unbekannter Fehler. Siehe HA-Log für Details."
+    }
+  }
+}

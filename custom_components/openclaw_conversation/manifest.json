@@ -1,0 +1,13 @@
+{
+  "domain": "openclaw_conversation",
+  "name": "OpenClaw Conversation Agent",
+  "version": "1.0.0",
+  "documentation": "https://github.com/andreasschiffmann86-prog/openclaw-ha-conversation",
+  "issue_tracker": "https://github.com/andreasschiffmann86-prog/openclaw-ha-conversation/issues",
+  "requirements": [],
+  "dependencies": ["conversation"],
+  "codeowners": ["@andreasschiffmann86-prog"],
+  "iot_class": "local_polling",
+  "config_flow": true,
+  "homeassistant": "2024.1.0"
+}

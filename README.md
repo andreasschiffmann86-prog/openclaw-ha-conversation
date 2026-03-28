@@ -46,18 +46,48 @@ Danach HA neu starten.
 ## Einrichtung
 
 1. **Einstellungen** → **Geräte & Dienste** → **Integration hinzufügen** → **OpenClaw**
-2. Felder ausfüllen:
-
-| Feld | Beschreibung | Standard |
-|---|---|---|
-| API-URL | URL der OpenClaw-Instanz | `http://localhost:8080` |
-| API-Schlüssel | Bearer-Token (optional) | — |
-| Anzeigename | Name in HA | `James` |
-| Timeout | Max. Wartezeit in Sekunden | `30` |
-| Gerätezustand senden | Sendet HA-Entitäten als Kontext | aus |
-
+2. Felder ausfüllen (siehe Details unten)
 3. **Speichern** — James erscheint jetzt unter
    **Einstellungen** → **Sprachassistenten** → Agenten-Auswahl
+
+### Konfigurationsfelder
+
+#### API-URL *(Pflichtfeld)*
+Die vollständige URL deiner OpenClaw-Instanz — **IP-Adresse und Port in einem Feld**:
+
+```
+http://<IP-Adresse>:<Port>
+```
+
+Beispiele:
+
+| Situation | Beispiel-URL |
+|---|---|
+| OpenClaw läuft lokal auf demselben Rechner wie HA | `http://localhost:8080` |
+| OpenClaw läuft auf einem anderen Gerät im Netzwerk | `http://192.168.1.42:8080` |
+| OpenClaw läuft mit HTTPS und eigenem Domain | `https://james.meinzuhause.de` |
+
+> Kein `/` am Ende. Port weglassen wenn Standard-HTTP/HTTPS-Port (80/443) verwendet wird.
+
+#### API-Schlüssel *(optional)*
+Ein geheimes Token (Bearer Token / Secret), falls deine OpenClaw-Instanz Authentifizierung verlangt.
+- Wird als `Authorization: Bearer <schlüssel>` im HTTP-Header mitgeschickt
+- **Kein Benutzername / kein Passwort** — nur ein einzelner Token-String
+- Leer lassen wenn OpenClaw ohne Auth betrieben wird
+
+#### Anzeigename
+Wie der Agent in HA heißt (z.B. `James`). Kann frei gewählt werden.
+
+#### Timeout (Sekunden)
+Wie lange HA maximal auf eine Antwort wartet (5–120 s). Standard: `30`.
+Bei langsamen Netzwerken oder komplexen Anfragen erhöhen.
+
+#### Gerätezustand an James senden
+Wenn aktiviert, schickt die Integration bei jeder Anfrage den aktuellen Status aller
+relevanten HA-Entitäten (Lichter, Schalter, Klima, Rollläden, Schlösser, Mediaplayer) mit.
+James kann dann Fragen wie „Was ist gerade an?" beantworten.
+
+> Deaktiviert lassen wenn OpenClaw keinen Kontext benötigt oder die Antwortzeit dadurch zu lang wird.
 
 ---
 

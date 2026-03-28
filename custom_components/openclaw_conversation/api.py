@@ -41,6 +41,50 @@ class OpenClawApiClient:
         self._timeout = timeout
         self._session = session
 
+    def _auth_headers(self) -> dict[str, str]:
+        headers: dict[str, str] = {}
+        if self._api_key:
+            headers["Authorization"] = f"Bearer {self._api_key}"
+        return headers
+
+    async def async_check_reachability(self) -> None:
+        """Verify that OpenClaw is reachable and the API key is accepted.
+
+        Tries GET /{health,ping,""} in order and accepts any HTTP response
+        (including 404) as proof of connectivity.  Only network-level errors,
+        timeouts and auth rejections raise exceptions.
+        """
+        probe_paths = ("/health", "/ping", "/")
+        last_exc: Exception | None = None
+
+        for path in probe_paths:
+            url = f"{self._base_url}{path}"
+            try:
+                async with self._session.get(
+                    url,
+                    headers=self._auth_headers(),
+                    timeout=aiohttp.ClientTimeout(total=min(self._timeout, 10)),
+                ) as resp:
+                    if resp.status in (401, 403):
+                        raise OpenClawAuthError(
+                            f"Authentication failed (HTTP {resp.status})"
+                        )
+                    # Any other response means the server is reachable.
+                    return
+            except (OpenClawAuthError,):
+                raise
+            except asyncio.TimeoutError as exc:
+                raise OpenClawTimeoutError("Connection test timed out") from exc
+            except aiohttp.ClientConnectionError as exc:
+                last_exc = exc
+                continue  # try next probe path
+            except aiohttp.ClientError as exc:
+                raise OpenClawConnectionError(f"HTTP client error: {exc}") from exc
+
+        raise OpenClawConnectionError(
+            f"Cannot connect to {self._base_url}: {last_exc}"
+        )
+
     async def async_send_message(
         self,
         message: str,
@@ -66,9 +110,7 @@ class OpenClawApiClient:
         if ha_context:
             payload["context"] = ha_context
 
-        headers: dict[str, str] = {"Content-Type": "application/json"}
-        if self._api_key:
-            headers["Authorization"] = f"Bearer {self._api_key}"
+        headers: dict[str, str] = {"Content-Type": "application/json", **self._auth_headers()}
 
         url = f"{self._base_url}/conversation"
 

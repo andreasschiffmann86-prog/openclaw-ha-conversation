@@ -105,9 +105,23 @@ James kann direkt als Konversations-Agent in einer Voice-Pipeline ausgewählt we
 
 ---
 
-## Erwartetes API-Format (OpenClaw-Seite)
+## OpenClaw-seitige Voraussetzungen
 
-### Request
+Die Integration benötigt **einen HTTP-Endpunkt** in deiner OpenClaw-Instanz,
+der Anfragen aus HA entgegennimmt und synchron antwortet.
+
+> Dieser Endpunkt existiert in OpenClaw nicht von Haus aus —
+> er muss als Gateway-Plugin / Skill ergänzt werden.
+
+### Verbindungstest beim Setup
+
+Der Config-Flow prüft beim Einrichten nur die **Erreichbarkeit** des Servers
+(GET auf `/health`, `/ping` oder `/`).  Der eigentliche `/conversation`-Endpunkt
+muss erst vorhanden sein, bevor du James aus HA heraus ansprechen kannst.
+
+### Erwartetes API-Format
+
+#### Request
 
 ```
 POST /conversation
@@ -126,13 +140,34 @@ Authorization: Bearer <token>   (optional)
 }
 ```
 
-### Response
+#### Response
 
 ```json
 {
   "response": "Das Licht im Wohnzimmer ist jetzt an.",
   "conversation_id": "ha-abc123"
 }
+```
+
+#### Minimales Beispiel (Python/FastAPI)
+
+```python
+from fastapi import FastAPI, Header
+from pydantic import BaseModel
+
+app = FastAPI()
+
+class ConversationRequest(BaseModel):
+    message: str
+    conversation_id: str | None = None
+    language: str = "de"
+    context: dict | None = None
+
+@app.post("/conversation")
+async def conversation(req: ConversationRequest, authorization: str | None = Header(None)):
+    # Hier: Anfrage intern an OpenClaw/James weiterleiten und Antwort abwarten
+    reply = await james.chat(req.message, session_id=req.conversation_id)
+    return {"response": reply, "conversation_id": req.conversation_id}
 ```
 
 ---

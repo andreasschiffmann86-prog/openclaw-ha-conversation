@@ -9,11 +9,9 @@ import voluptuous as vol
 from homeassistant import config_entries
 from homeassistant.core import callback
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
-import homeassistant.helpers.config_validation as cv
 
 from .api import (
     OpenClawApiClient,
-    OpenClawApiError,
     OpenClawAuthError,
     OpenClawConnectionError,
     OpenClawTimeoutError,
@@ -52,7 +50,11 @@ def _build_schema(defaults: dict[str, Any]) -> vol.Schema:
 
 
 async def _validate_connection(hass, user_input: dict[str, Any]) -> str | None:
-    """Try connecting to OpenClaw. Returns an error key or None on success."""
+    """Check that OpenClaw is reachable and the API key is valid.
+
+    Uses GET /health (with fallbacks) so the /conversation endpoint does not
+    need to exist yet.  Returns an error key string or None on success.
+    """
     client = OpenClawApiClient(
         api_url=user_input[CONF_API_URL],
         api_key=user_input.get(CONF_API_KEY) or None,
@@ -60,16 +62,13 @@ async def _validate_connection(hass, user_input: dict[str, Any]) -> str | None:
         session=async_get_clientsession(hass),
     )
     try:
-        await client.async_send_message("ping", language="en")
+        await client.async_check_reachability()
     except OpenClawAuthError:
         return "invalid_auth"
     except OpenClawTimeoutError:
         return "timeout"
     except OpenClawConnectionError:
         return "cannot_connect"
-    except OpenClawApiError:
-        # Server responded with a 4xx/5xx — it is reachable, that's enough.
-        pass
     except Exception:
         _LOGGER.exception("Unexpected error during OpenClaw connection test")
         return "unknown"

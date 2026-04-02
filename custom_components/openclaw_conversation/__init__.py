@@ -16,6 +16,7 @@ from .const import (
     DEFAULT_TIMEOUT,
     DOMAIN,
 )
+from .supervisor import BridgeSupervisor
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -33,11 +34,18 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         session=async_get_clientsession(hass),
     )
 
-    hass.data.setdefault(DOMAIN, {})[entry.entry_id] = client
+    supervisor = BridgeSupervisor(client)
+    await supervisor.async_start(hass)
+
+    hass.data.setdefault(DOMAIN, {})[entry.entry_id] = {
+        "client": client,
+        "supervisor": supervisor,
+    }
 
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
 
     entry.async_on_unload(entry.add_update_listener(_async_update_listener))
+    entry.async_on_unload(supervisor.async_stop)
 
     return True
 

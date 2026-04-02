@@ -1,7 +1,7 @@
 {
   "domain": "openclaw_conversation",
   "name": "OpenClaw Conversation Agent",
-  "version": "1.0.0",
+  "version": "1.1.0",
   "documentation": "https://github.com/andreasschiffmann86-prog/openclaw-ha-conversation",
   "issue_tracker": "https://github.com/andreasschiffmann86-prog/openclaw-ha-conversation/issues",
   "requirements": [],

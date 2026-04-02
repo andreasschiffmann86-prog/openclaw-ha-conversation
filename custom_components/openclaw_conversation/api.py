@@ -143,3 +143,43 @@ class OpenClawApiClient:
             raise
         except aiohttp.ClientError as exc:
             raise OpenClawConnectionError(f"HTTP client error: {exc}") from exc
+
+    async def async_send_message_with_retry(
+        self,
+        message: str,
+        conversation_id: str | None = None,
+        language: str = "de",
+        ha_context: dict[str, Any] | None = None,
+        max_attempts: int = 3,
+    ) -> dict[str, Any]:
+        """Send a message with exponential-backoff retry on transient errors.
+
+        Retries only on connection/timeout failures (bridge flap).
+        Auth errors and API errors (4xx) are re-raised immediately.
+        Backoff: 0.5 s, 1 s, 2 s between attempts.
+        """
+        last_exc: OpenClawApiError | None = None
+        for attempt in range(max_attempts):
+            try:
+                return await self.async_send_message(
+                    message=message,
+                    conversation_id=conversation_id,
+                    language=language,
+                    ha_context=ha_context,
+                )
+            except (OpenClawAuthError, OpenClawApiError):
+                raise  # not retryable
+            except (OpenClawConnectionError, OpenClawTimeoutError) as exc:
+                last_exc = exc
+                if attempt < max_attempts - 1:
+                    backoff = 0.5 * (2 ** attempt)  # 0.5 s, 1 s, 2 s
+                    _LOGGER.debug(
+                        "OpenClaw send failed (attempt %d/%d), retrying in %.1fs: %s",
+                        attempt + 1,
+                        max_attempts,
+                        backoff,
+                        exc,
+                    )
+                    await asyncio.sleep(backoff)
+
+        raise last_exc  # type: ignore[misc]
